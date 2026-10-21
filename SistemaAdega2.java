@@ -75,64 +75,68 @@ public class SistemaAdega2 {
     // VENDA COM CÁLCULO DE IMPOSTO E BLOQUEIO DE ESTOQUE ZERO
     // --------------------------------------------------------
     public static void realizarVenda() {
-        if (totalCadastrados == 0) {
-            System.out.println("\n[Aviso] Estoque vazio!");
-            return;
-        }
+    if (totalCadastrados == 0) {
+        System.out.println("\n[Aviso] Estoque vazio!");
+        return;
+    }
 
-        System.out.println("\n--- Selecione a Bebida ---");
-        for (int i = 0; i < totalCadastrados; i++) {
-            System.out.println("[" + i + "] " + nomes[i] + 
-                               " | R$ " + String.format("%.2f", precosVenda[i]) + 
-                               " | Estoque: " + quantidades[i] + 
-                               " | Imposto: " + aliquotas[i] + "%");
-        }
+    System.out.println("\n--- Selecione a Bebida ---");
+    for (int i = 0; i < totalCadastrados; i++) {
+        System.out.println("[" + i + "] " + nomes[i] + 
+                           " | Preço final: R$ " + String.format("%.2f", precosVenda[i]) + 
+                           " | Estoque: " + quantidades[i] + 
+                           " | Imposto embutido: " + aliquotas[i] + "%");
+    }
 
-        int indice = -1;
-        while (true) {
-            System.out.print("\nDigite o NÚMERO do produto: ");
-            try {
-                indice = Integer.parseInt(scanner.nextLine());
-                if (indice >= 0 && indice < totalCadastrados) {
-                    if (quantidades[indice] == 0) {
-                        System.out.println("[Erro] O produto '" + nomes[indice] + "' está sem estoque e não pode ser vendido.");
-                        return;
-                    }
-                    break;
-                } else System.out.println("[Erro] Número não encontrado na lista.");
-            } catch (NumberFormatException e) {
-                System.out.println("[Erro] Digite apenas o número identificador inteiro.");
-            }
-        }
-
-        while (true) {
-            System.out.print("Vender quantas unidades de " + nomes[indice] + "? ");
-            try {
-                int qtdVenda = Integer.parseInt(scanner.nextLine());
-
-                if (qtdVenda < 0) {
-                    System.out.println("[Erro] A quantidade deve ser maior que zero.");
-                } else if (qtdVenda > quantidades[indice]) {
-                    System.out.println("[Erro] Estoque insuficiente! Restam apenas " + quantidades[indice] + " unidades.");
-                } else {
-                    quantidades[indice] -= qtdVenda;
-                    double valorTotalVenda = qtdVenda * precosVenda[indice];
-                    double imposto = valorTotalVenda * (aliquotas[indice] / 100.0);
-
-                    caixaDoDia += valorTotalVenda + imposto;
-                    totalImpostos += imposto;
-
-                    System.out.println("\n[Sucesso] Venda concluída!");
-                    System.out.println(" - Valor sem imposto: R$ " + String.format("%.2f", valorTotalVenda));
-                    System.out.println(" - Imposto aplicado (" + aliquotas[indice] + "%): R$ " + String.format("%.2f", imposto));
-                    System.out.println(" - Total com imposto: R$ " + String.format("%.2f", valorTotalVenda + imposto));
-                    break;
+    int indice = -1;
+    while (true) {
+        System.out.print("\nDigite o NÚMERO do produto: ");
+        try {
+            indice = Integer.parseInt(scanner.nextLine());
+            if (indice >= 0 && indice < totalCadastrados) {
+                if (quantidades[indice] == 0) {
+                    System.out.println("[Erro] O produto '" + nomes[indice] + "' está sem estoque e não pode ser vendido.");
+                    return;
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("[Erro] Digite apenas números inteiros.");
-            }
+                break;
+            } else System.out.println("[Erro] Número não encontrado na lista.");
+        } catch (NumberFormatException e) {
+            System.out.println("[Erro] Digite apenas o número identificador inteiro.");
         }
     }
+
+    while (true) {
+        System.out.print("Vender quantas unidades de " + nomes[indice] + "? ");
+        try {
+            int qtdVenda = Integer.parseInt(scanner.nextLine());
+
+            if (qtdVenda <= 0) {
+                System.out.println("[Erro] A quantidade deve ser maior que zero.");
+            } else if (qtdVenda > quantidades[indice]) {
+                System.out.println("[Erro] Estoque insuficiente! Restam apenas " + quantidades[indice] + " unidades.");
+            } else {
+                quantidades[indice] -= qtdVenda;
+                double valorTotalVenda = qtdVenda * precosVenda[indice];
+
+                // imposto embutido
+                double imposto = valorTotalVenda * (aliquotas[indice] / (100.0 + aliquotas[indice]));
+                double receitaLiquida = valorTotalVenda - imposto;
+
+                caixaDoDia += valorTotalVenda;   // entra o valor cheio
+                totalImpostos += imposto;        // acumula imposto
+
+                System.out.println("\n[Sucesso] Venda concluída!");
+                System.out.println(" - Valor total (com imposto): R$ " + String.format("%.2f", valorTotalVenda));
+                System.out.println(" - Receita líquida (sem imposto): R$ " + String.format("%.2f", receitaLiquida));
+                System.out.println(" - Imposto embutido (" + aliquotas[indice] + "%): R$ " + String.format("%.2f", imposto));
+                break;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("[Erro] Digite apenas números inteiros.");
+        }
+    }
+}
+
 
     // --------------------------------------------------------
     // CADASTRO DE PRODUTO COM ALÍQUOTA
